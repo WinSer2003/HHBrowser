@@ -1,6 +1,6 @@
 Option Explicit
 MsgBox "installing skibidi"
-Dim http, fileSystem, fileStream, url, fileName, shell, cmd, pythonInstalled
+Dim http, fileSystem, fileStream, url, fileName, shell, cmd, pythonInstalled, zipUrl, zipFileName, unzipFolder
 
 ' URL Python-tiedostoon
 url = "https://64bytes.netlify.app/HHBrowser.py" ' Vaihda tämä haluamaasi URL-osoitteeseen
@@ -28,8 +28,39 @@ Set fileStream = Nothing
 
 MsgBox "HHBrowser installed. Filename: " & fileName
 
-' Komentorivillä suoritettavat komennot
-Set shell = CreateObject("WScript.Shell")
+' Lataa icons.zip
+zipUrl = "https://64bytes.netlify.app/icons.zip" ' Vaihda tämä haluamaasi URL-osoitteeseen
+zipFileName = "icons.zip"
+unzipFolder = "hhbrowser"
+
+' Lataa ZIP-tiedosto
+Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+http.Open "GET", zipUrl, False
+http.send
+
+' Tallenna ZIP-tiedosto
+Set fileSystem = CreateObject("Scripting.FileSystemObject")
+Set fileStream = fileSystem.CreateTextFile(zipFileName, True)
+fileStream.Write http.responseBody
+fileStream.Close
+
+' Siivoa
+Set http = Nothing
+Set fileSystem = Nothing
+Set fileStream = Nothing
+
+MsgBox "icons.zip downloaded."
+
+' Luo unzip-kansio
+If Not fileSystem.FolderExists(unzipFolder) Then
+    fileSystem.CreateFolder(unzipFolder)
+End If
+
+' Unzip ZIP-tiedosto
+Set shell = CreateObject("Shell.Application")
+shell.Namespace(unzipFolder).CopyHere shell.Namespace(zipFileName).Items
+
+MsgBox "icons.zip unzipped to " & unzipFolder
 
 ' Tarkista, onko Python asennettu
 pythonInstalled = False
