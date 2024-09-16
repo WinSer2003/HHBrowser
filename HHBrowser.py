@@ -30,8 +30,7 @@ class SimpleBrowser(QMainWindow):
         # Navigation toolbar
         navbar = QToolBar()
         self.addToolBar(navbar)
-
-        # Back button
+              # Back button
         self.back_btn = QAction(QIcon("icons/back.png"), 'Back', self)
         self.back_btn.triggered.connect(lambda: self.tabs.currentWidget().back())
         navbar.addAction(self.back_btn)
@@ -45,15 +44,16 @@ class SimpleBrowser(QMainWindow):
         self.reload_btn = QAction(QIcon("icons/reload.png"), 'Reload', self)
         self.reload_btn.triggered.connect(lambda: self.tabs.currentWidget().reload())
         navbar.addAction(self.reload_btn)
-
         # Home button
         self.home_btn = QAction(QIcon("icons/home.png"), 'Home', self)
         self.home_btn.triggered.connect(self.navigate_home)
         navbar.addAction(self.home_btn)
-
+        self.new_btn = QAction(QIcon("icons/new.png"), 'New tab', self)
+        self.new_btn.triggered.connect(lambda:         self.add_new_tab(QUrl(self.homepage), "New Tab"))
+        navbar.addAction(self.new_btn)
         # Add address bar to navigation toolbar
         navbar.addWidget(self.url_bar)
-
+        
         # SSL Icon - Removed
         # self.ssl_icon_label = QLabel()
         # self.ssl_icon_label.setPixmap(QIcon("icons/no_ssl.png").pixmap(16, 16))  # Default No Certificate
@@ -228,6 +228,9 @@ class SimpleBrowser(QMainWindow):
         settings_dialog.setLayout(settings_layout)
         settings_dialog.exec_()
 
+
+
+
     def save_settings_from_dialog(self):
         self.search_engine = self.search_engine_input.text()
         self.homepage = self.homepage_input.text()
@@ -356,6 +359,7 @@ class SimpleBrowser(QMainWindow):
 
     def display_source(self, html):
         # Create a new tab for the source code
+        
         text_edit = QTextEdit()
         text_edit.setPlainText(html)
         i = self.tabs.addTab(text_edit, "Source View")
