@@ -5,7 +5,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineDownloadItem, QWebEngineProfile
 from PyQt5.QtGui import QIcon
-endwithls = (".fi", ".com",".net",".org")
+import lists
+endwithls = lists.endwithls
 class SimpleBrowser(QMainWindow):
     def __init__(self):
         super().__init__()
