@@ -70,5 +70,6 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo Clone and move complete!
+echo Muista asentaa myös python ja tarvittavat kirjastot!
 endlocal
 pause
