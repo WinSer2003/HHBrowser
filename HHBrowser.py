@@ -7,6 +7,7 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineDownloadItem, QWe
 from PyQt5.QtGui import QIcon
 import lists
 endwithls = lists.endwithls
+
 class SimpleBrowser(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -31,7 +32,8 @@ class SimpleBrowser(QMainWindow):
         # Navigation toolbar
         navbar = QToolBar()
         self.addToolBar(navbar)
-              # Back button
+
+        # Back button
         self.back_btn = QAction(QIcon("icons/back.png"), 'Back', self)
         self.back_btn.triggered.connect(lambda: self.tabs.currentWidget().back())
         navbar.addAction(self.back_btn)
@@ -45,21 +47,19 @@ class SimpleBrowser(QMainWindow):
         self.reload_btn = QAction(QIcon("icons/reload.png"), 'Reload', self)
         self.reload_btn.triggered.connect(lambda: self.tabs.currentWidget().reload())
         navbar.addAction(self.reload_btn)
+
         # Home button
         self.home_btn = QAction(QIcon("icons/home.png"), 'Home', self)
         self.home_btn.triggered.connect(self.navigate_home)
         navbar.addAction(self.home_btn)
+
+        # New tab button
         self.new_btn = QAction(QIcon("icons/new.png"), 'New tab', self)
-        self.new_btn.triggered.connect(lambda:         self.add_new_tab(QUrl(self.homepage), "New Tab"))
+        self.new_btn.triggered.connect(lambda: self.add_new_tab(QUrl(self.homepage), "New Tab"))
         navbar.addAction(self.new_btn)
+
         # Add address bar to navigation toolbar
         navbar.addWidget(self.url_bar)
-        
-        # SSL Icon - Removed
-        # self.ssl_icon_label = QLabel()
-        # self.ssl_icon_label.setPixmap(QIcon("icons/no_ssl.png").pixmap(16, 16))  # Default No Certificate
-        # self.ssl_icon_label.setToolTip("No Certificate")
-        # navbar.addWidget(self.ssl_icon_label)
 
         # Add new tab with homepage
         self.load_settings()
@@ -77,6 +77,11 @@ class SimpleBrowser(QMainWindow):
 
         # Enable rounded design
         self.enable_rounded_design()
+
+        # History list
+        self.history_file = "history.txt"
+        self.history = []
+        self.load_history()
 
     def load_blocklist(self):
         # Load the blocklist from a file (blocklist.txt)
@@ -101,6 +106,18 @@ class SimpleBrowser(QMainWindow):
         with open("settings.json", "w") as f:
             json.dump(settings, f)
 
+    def load_history(self):
+        # Load history from file
+        if os.path.exists(self.history_file):
+            with open(self.history_file, "r") as f:
+                self.history = [line.strip() for line in f.readlines()]
+
+    def save_history(self):
+        # Save history to file
+        with open(self.history_file, "w") as f:
+            for url in self.history:
+                f.write(f"{url}\n")
+
     def navigate_to_url(self):
         url = self.url_bar.text()
         if not url.startswith("http" or "https"):
@@ -113,12 +130,17 @@ class SimpleBrowser(QMainWindow):
         # Check if URL is in blocklist
         domain = QUrl(url).host()
         if domain in self.blocklist:
-            QMessageBox.critical(self, "Blocked", f"Access to {domain} is blocked by security settings. \n Filter: Url on blockatulla listalla")
+            QMessageBox.critical(self, "Blocked", f"Access to {domain} is blocked by security settings.")
             return
-       
+        
         # Proceed with loading the URL
         self.tabs.currentWidget().setUrl(QUrl(url))
-
+        
+        # Save URL to history
+        if url not in self.history:
+            self.history.append(url)
+            self.save_history()
+    
     def add_new_tab(self, qurl=None, label="Blank"):
         browser = QWebEngineView()
         browser.setUrl(qurl if qurl else QUrl(self.search_engine))
@@ -176,8 +198,20 @@ class SimpleBrowser(QMainWindow):
         view_source_action.triggered.connect(self.view_source)
         view_menu.addAction(view_source_action)
 
+        # History menu
+        history_menu = menubar.addMenu("History")
+
+        # View History action
+        view_history_action = QAction("View History", self)
+        view_history_action.triggered.connect(self.view_history)
+        history_menu.addAction(view_history_action)
+
         # Tools menu
         tools_menu = menubar.addMenu("Tools")
+        # AI Chat action
+        ai_chat_action = QAction("Start AI Chat", self)
+        ai_chat_action.triggered.connect(lambda: self.add_new_tab(QUrl("https://duckduckgo.com/aichat"), "AI Chat"))
+        tools_menu.addAction(ai_chat_action)
 
         # Clear cache
         clear_cache_action = QAction("Clear Cache", self)
@@ -229,9 +263,6 @@ class SimpleBrowser(QMainWindow):
         settings_dialog.setLayout(settings_layout)
         settings_dialog.exec_()
 
-
-
-
     def save_settings_from_dialog(self):
         self.search_engine = self.search_engine_input.text()
         self.homepage = self.homepage_input.text()
@@ -260,94 +291,148 @@ class SimpleBrowser(QMainWindow):
     def enable_rounded_design(self):
         # Rounded and modern style for the entire UI
         rounded_style = """
-            QMainWindow {
-                background-color: #2E2E2E;
-                color: white;
-            }
-            QToolBar {
-                background-color: #3A3A3A;
-                color: white;
-                border: none;
-            }
-            QTabWidget::pane {
-                border: none;
-                background-color: #2E2E2E;
-            }
-            QTabBar::tab {
-                background: #505050;
-                color: white;
-                padding: 10px;
-                margin: 2px;
-                border: none;
-                border-radius: 15px;
-            }
-            QTabBar::tab:selected {
-                background: #404040;
-            }
-            QLineEdit {
-                background-color: #3A3A3A;
-                color: white;
-                padding: 8px;
-                border: 2px solid #666;
-                border-radius: 20px;
-            }
-            QLineEdit:focus {
-                border: 2px solid #009688;
-            }
-            QPushButton {
-                background-color: #4CAF50;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 25px;
-            }
-            QPushButton:hover {
-                background-color: #45A049;
-            }
-            QToolButton {
-                background-color: #3A3A3A;
-                border-radius: 50%;
-                padding: 10px;
-                margin: 5px;
-            }
-            QToolButton:hover {
-                background-color: #505050;
-            }
-            QMenuBar {
-                background-color: #2E2E2E;
-                color: white;
-                border: none;
-            }
-            QMenuBar::item {
-                background-color: #2E2E2E;
-                color: white;
-                padding: 8px 15px;
-                margin: 2px;
-                border-radius: 10px;
-            }
-            QMenuBar::item:selected {
-                background-color: #3A3A3A;
-            }
-            QMenu {
-                background-color: #2E2E2E;
-                color: white;
-                border-radius: 10px;
-            }
-            QMenu::item {
-                padding: 8px 15px;
-                border-radius: 8px;
-            }
-            QMenu::item:selected {
-                background-color: #404040;
-            }
-            QLabel {
-                color: white;
-            }
-            QDialog {
-                background-color: #2E2E2E;
-                color: white;
-                border-radius: 15px;
-            }
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        QMainWindow {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #1c1f26, stop:1 #34495e);
+            background-size: 200% 200%;
+            animation: gradientAnimation 15s ease infinite;
+            color: white;
+        }
+
+        QToolBar {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #34495e, stop:1 #2C3E50);
+            color: white;
+            border: none;
+            border-bottom: 2px solid #1C2833;
+            box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        QTabWidget::pane {
+            border: none;
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #1C1F26, stop:1 #2C3E50);
+            background-size: 200% 200%;
+            animation: gradientAnimation 20s ease infinite;
+        }
+
+        QTabBar::tab {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #3A3F4B, stop:1 #4A5060);
+            color: white;
+            padding: 10px;
+            margin: 2px;
+            border: none;
+            border-radius: 15px;
+            transition: background 0.3s, transform 0.3s;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        QTabBar::tab:selected {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #2D3A4A, stop:1 #3B4B5A);
+            transform: scale(1.05);
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        QLineEdit {
+            background-color: #2C313C;
+            color: white;
+            padding: 8px;
+            border: 2px solid #445566;
+            border-radius: 20px;
+            transition: border 0.3s, box-shadow 0.3s;
+        }
+
+        QLineEdit:focus {
+            border: 2px solid #009688;
+            box-shadow: 0 0 5px rgba(0, 150, 136, 0.8);
+        }
+
+        QPushButton {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #4CAF50, stop:1 #45A049);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            transition: background 0.3s, transform 0.3s;
+            background_transparency: 100%;
+        }
+
+        QPushButton:hover {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #43A047, stop:1 #388E3C);
+            transform: translateY(-2px);
+            box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        QToolButton {
+            background-color: #252A34;
+            border-radius: 50%;
+            padding: 10px;
+            margin: 5px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        QToolButton:hover {
+            background-color: #3A3F4B;
+            transform: scale(1.1);
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        QMenuBar {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #1c1f26, stop:1 #34495e);
+            color: white;
+            border: none;
+            background-size: 200% 200%;
+            animation: gradientAnimation 20s ease infinite;
+        }
+
+        QMenuBar::item {
+            background-color: transparent;
+            color: white;
+            padding: 8px 15px;
+            margin: 2px;
+            border-radius: 10px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        QMenuBar::item:selected {
+            background-color: #2A313E;
+            color: #FFFFFF;
+            background_transparency: 100%;
+        }
+
+        QMenu {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #1C1F26, stop:1 #2C3E50);
+            color: white;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        QMenu::item {
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        QMenu::item:selected {
+            background-color: #3B4B5A;
+        }
+
+        QLabel {
+            color: white;
+        }
+
+        QDialog {
+            background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 #1C1F26, stop:1 #2C3E50);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.5);
+            background-size: 200% 200%;
+            animation: gradientAnimation 15s ease infinite;
+        }
         """
         self.setStyleSheet(rounded_style)
 
@@ -360,7 +445,6 @@ class SimpleBrowser(QMainWindow):
 
     def display_source(self, html):
         # Create a new tab for the source code
-        
         text_edit = QTextEdit()
         text_edit.setPlainText(html)
         i = self.tabs.addTab(text_edit, "Source View")
@@ -382,9 +466,34 @@ class SimpleBrowser(QMainWindow):
             title = current_browser.page().title()
             self.setWindowTitle(title)
 
+    def view_history(self):
+        # Create a simple history dialog
+        history_dialog = QDialog(self)
+        history_dialog.setWindowTitle("History")
+        history_layout = QVBoxLayout()
+
+        # List widget for displaying history
+        history_list = QListWidget()
+        history_list.addItems(self.history)
+        history_layout.addWidget(history_list)
+
+        # Open URL action
+        open_url_action = QPushButton("Open Selected URL", self)
+        open_url_action.clicked.connect(lambda: self.open_selected_url(history_list))
+        history_layout.addWidget(open_url_action)
+
+        history_dialog.setLayout(history_layout)
+        history_dialog.exec_()
+
+    def open_selected_url(self, history_list):
+        selected_items = history_list.selectedItems()
+        if selected_items:
+            selected_url = selected_items[0].text()
+            self.tabs.currentWidget().setUrl(QUrl(selected_url))
+
 app = QApplication(sys.argv)
 QApplication.setApplicationName("HHBrowser")
 window = SimpleBrowser()
 window.show()  # Ensure the window is shown
 app.exec_()
-print("erm koodin vika rivi ajettu")
+print("Application closed")

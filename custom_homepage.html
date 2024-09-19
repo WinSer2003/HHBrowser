@@ -1,1 +1,144 @@
-tervetuloa HHBrowser
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HHBrowser Startpage</title>
+    <style>
+        /* Ultra-hieno, moderni tyyli */
+        body {
+            font-family: 'Helvetica', sans-serif;
+            background: linear-gradient(135deg, #2980b9, #6dd5fa, #ffffff);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        #header {
+            text-align: center;
+            padding: 50px 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        #header h1 {
+            margin: 0;
+            padding: 0;
+        }
+
+        #search-container {
+            margin: 30px auto;
+            text-align: center;
+        }
+
+        #search-container iframe {
+            width: 80%;
+            height: 50px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #widgets {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 50px;
+        }
+
+        .widget {
+            background: white;
+            border-radius: 15px;
+            margin: 20px;
+            padding: 30px;
+            width: 250px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+
+        .widget:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .widget h2 {
+            font-size: 1.5em;
+            color: #2980b9;
+        }
+
+        .widget a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        .widget a:hover {
+            background-color: #2980b9;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Otsikko -->
+    <div id="header">
+        <h1>Tervetuloa HHBrowser Startpageen</h1>
+    </div>
+
+    <!-- DuckDuckGo hakupalkki -->
+    <div id="search-container">
+        <iframe src="https://duckduckgo.com/search.html?width=400&duck=yes" frameborder="0"></iframe>
+        <!-- Backup link if iframe doesn't load -->
+        <p><a href="https://duckduckgo.com" target="_blank">Siirry DuckDuckGohon</a></p>
+    </div>
+
+    <!-- Widgetit -->
+    <div id="widgets">
+        <div class="widget">
+            <h2>Wikipedia</h2>
+            <p>Nopea pääsy Wikipediaan.</p>
+            <a href="https://fi.wikipedia.org" target="_blank">Mene Wikipediaan</a>
+        </div>
+
+        <div class="widget">
+            <h2>Uutiset</h2>
+            <p>Katso uusimmat uutiset.</p>
+            <a href="https://news.ycombinator.com/" target="_blank">Mene Uutisiin</a>
+        </div>
+
+        <div class="widget">
+            <h2>Sähköposti</h2>
+            <p>Avaa sähköpostisi nopeasti.</p>
+            <a href="mailto:yourname@example.com">Lähetä sähköpostia</a>
+        </div>
+
+        <div class="widget">
+            <h2>Google</h2>
+            <p>Nopea linkki Google-hakuun.</p>
+            <a href="https://www.google.com" target="_blank">Mene Googleen</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 HHBrowser Startpage</p>
+    </footer>
+
+</body>
+</html>
