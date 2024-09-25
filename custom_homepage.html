@@ -210,6 +210,33 @@
             <p>Nopea linkki Google-hakuun.</p>
             <a href="https://www.google.com" target="_blank">Mene Googleen</a>
         </div>
+        <!-- Add this to the widgets section -->
+<div class="widget">
+    <h2>Oma linkki</h2>
+    <input id="custom-link-name" type="text" placeholder="Linkin nimi">
+    <input id="custom-link-url" type="url" placeholder="Linkin URL">
+    <button onclick="saveCustomLink()">Tallenna</button>
+    <div id="custom-link-display"></div>
+</div>
+
+<script>
+    function saveCustomLink() {
+        const name = document.getElementById('custom-link-name').value;
+        const url = document.getElementById('custom-link-url').value;
+        localStorage.setItem('customLink', JSON.stringify({ name, url }));
+        displayCustomLink();
+    }
+
+    function displayCustomLink() {
+        const link = JSON.parse(localStorage.getItem('customLink'));
+        if (link) {
+            document.getElementById('custom-link-display').innerHTML = `<a href="${link.url}" target="_blank">${link.name}</a>`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", displayCustomLink);
+</script>
+
     </div>
 
     <!-- Footer -->
