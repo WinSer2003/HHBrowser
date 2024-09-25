@@ -6,7 +6,7 @@
     <title>HHBrowser Startpage</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* Modern, sleek style */
+        /* Clean, modern style */
         body {
             font-family: 'Roboto', sans-serif;
             background: linear-gradient(135deg, #1c92d2, #f2fcfe);
@@ -17,115 +17,160 @@
 
         #header {
             text-align: center;
-            padding: 60px 0;
+            padding: 50px 0;
             background: rgba(0, 0, 0, 0.75);
             color: white;
             font-size: 2.5em;
-            letter-spacing: 2px;
             text-transform: uppercase;
+            letter-spacing: 1.5px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         #header h1 {
             margin: 0;
-            font-weight: 700;
+            font-size: 3em;
+        }
+
+        #time {
+            font-size: 1.2em;
+            margin-top: 10px;
         }
 
         #search-container {
-            margin: 40px auto;
+            margin: 20px auto;
             text-align: center;
         }
 
-        #search-container iframe {
-            width: 80%;
-            height: 50px;
+        #search-container input {
+            width: 60%;
+            padding: 15px;
+            border-radius: 25px;
             border: none;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-size: 1.2em;
         }
 
-        #search-container p {
-            margin: 10px 0;
+        #search-container button {
+            padding: 15px 30px;
+            margin-left: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #search-container button:hover {
+            background-color: #2980b9;
         }
 
         #widgets {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 30px;
             padding: 40px;
         }
 
         .widget {
             background: white;
             border-radius: 20px;
-            padding: 30px;
-            width: 220px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            margin: 20px;
+            padding: 40px;
+            width: 250px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-align: center;
         }
 
         .widget:hover {
-            transform: translateY(-12px);
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+            transform: translateY(-10px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
         }
 
         .widget h2 {
-            font-size: 1.6em;
-            color: #1c92d2;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .widget p {
-            color: #555;
+            font-size: 1.5em;
+            color: #2980b9;
         }
 
         .widget a {
             display: inline-block;
-            padding: 12px 25px;
-            background-color: #1c92d2;
+            padding: 10px 20px;
+            background-color: #3498db;
             color: white;
             text-decoration: none;
             border-radius: 5px;
-            margin-top: 15px;
-            font-weight: 500;
+            margin-top: 10px;
             transition: background-color 0.2s ease;
         }
 
         .widget a:hover {
-            background-color: #147ab6;
+            background-color: #2980b9;
         }
 
         footer {
             text-align: center;
-            padding: 25px;
-            background-color: rgba(0, 0, 0, 0.75);
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
             color: white;
             font-size: 0.9em;
         }
 
-        footer p {
-            margin: 0;
+        /* Weather widget */
+        #weather {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        #weather p {
+            font-size: 1.1em;
         }
 
     </style>
+    <script>
+        // Live clock functionality
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('time').textContent = hours + ':' + minutes + ':' + seconds;
+        }
+
+        setInterval(updateClock, 1000);
+
+        // Fetch simple weather data (can integrate real API later)
+        function getWeather() {
+            // Placeholder values for weather
+            document.getElementById('weather-data').textContent = "Helsinki: 15°C, Aurinkoista";
+        }
+
+        document.addEventListener("DOMContentLoaded", getWeather);
+    </script>
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Header with live clock -->
     <div id="header">
         <h1>Tervetuloa HHBrowser Startpageen</h1>
+        <div id="time"></div>
     </div>
 
-    <!-- DuckDuckGo Search Bar -->
+    <!-- Search bar -->
     <div id="search-container">
-        <iframe src="https://duckduckgo.com/search.html?width=400&duck=yes" frameborder="0"></iframe>
-        <p><a href="https://duckduckgo.com" target="_blank">Siirry DuckDuckGohon</a></p>
+        <input type="text" placeholder="Hae verkkosivustoilta...">
+        <button>Hae</button>
     </div>
 
-    <!-- Widgets -->
+    <!-- Weather widget -->
+    <div id="weather">
+        <p id="weather-data"></p>
+    </div>
+
+    <!-- Quick access widgets -->
     <div id="widgets">
         <div class="widget">
             <h2>Wikipedia</h2>
