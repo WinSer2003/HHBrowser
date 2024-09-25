@@ -149,6 +149,21 @@
         }
 
         document.addEventListener("DOMContentLoaded", getWeather);
+
+        // Search functionality
+        function performSearch() {
+            const query = document.getElementById('search-input').value;
+            if (query) {
+                window.location.href = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        // Add enter key functionality for the search input
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        }
     </script>
 </head>
 <body>
@@ -161,8 +176,8 @@
 
     <!-- Search bar -->
     <div id="search-container">
-        <input type="text" placeholder="Hae verkkosivustoilta...">
-        <button>Hae</button>
+        <input id="search-input" type="text" placeholder="Hae verkkosivustoilta..." onkeypress="handleKeyPress(event)">
+        <button onclick="performSearch()">Hae</button>
     </div>
 
     <!-- Weather widget -->
