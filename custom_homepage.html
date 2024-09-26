@@ -130,7 +130,7 @@
         }
 
     </style>
-    <script>
+   <script>
         // Live clock functionality
         function updateClock() {
             const now = new Date();
@@ -154,7 +154,7 @@
         function performSearch() {
             const query = document.getElementById('search-input').value;
             if (query) {
-                window.location.href = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+                window.location.href = https://duckduckgo.com/?q=${encodeURIComponent(query)};
             }
         }
 
@@ -174,11 +174,29 @@
         <div id="time"></div>
     </div>
 
+
+
     <!-- Search bar -->
     <div id="search-container">
         <input id="search-input" type="text" placeholder="Hae verkkosivustoilta..." onkeypress="handleKeyPress(event)">
         <button onclick="performSearch()">Hae</button>
     </div>
+<script>
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            performSearch();
+        }
+    }
+</script>
+<script>
+function performSearch() {
+    const query = document.getElementById('search-input').value;
+    if (query) {
+        window.location.href = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+    }
+}
+
+</script>
 
     <!-- Weather widget -->
     <div id="weather">
@@ -190,13 +208,13 @@
         <div class="widget">
             <h2>Wikipedia</h2>
             <p>Nopea pääsy Wikipediaan.</p>
-            <a href="https://fi.wikipedia.org" target="_blank">Mene Wikipediaan</a>
+            <a href="https://fi.wikipedia.org">Mene Wikipediaan</a>
         </div>
 
         <div class="widget">
             <h2>Uutiset</h2>
             <p>Katso uusimmat uutiset.</p>
-            <a href="https://news.ycombinator.com/" target="_blank">Mene Uutisiin</a>
+            <a href="https://news.ycombinator.com/">Mene Uutisiin</a>
         </div>
 
         <div class="widget">
@@ -208,7 +226,7 @@
         <div class="widget">
             <h2>Google</h2>
             <p>Nopea linkki Google-hakuun.</p>
-            <a href="https://www.google.com" target="_blank">Mene Googleen</a>
+            <a href="https://www.google.com">Mene Googleen</a>
         </div>
         <!-- Add this to the widgets section -->
 <div class="widget">
