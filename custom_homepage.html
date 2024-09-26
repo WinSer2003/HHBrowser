@@ -177,6 +177,8 @@
 
 <!-- Modify search container -->
 <select id="search-engine">
+            <input id="search-input" type="text" placeholder="Hae verkkosivustoilta..." onkeypress="handleKeyPress(event)">
+        <button onclick="performSearch()">Hae</button>
     <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
     <option value="https://www.google.com/search?q=">Google</option>
     <option value="https://www.bing.com/search?q=">Bing</option>
