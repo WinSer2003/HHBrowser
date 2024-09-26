@@ -181,7 +181,13 @@
         <input id="search-input" type="text" placeholder="Hae verkkosivustoilta..." onkeypress="handleKeyPress(event)">
         <button onclick="performSearch()">Hae</button>
     </div>
-
+<script>
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            performSearch();
+        }
+    }
+</script>
 <script>
 function performSearch() {
     const query = document.getElementById('search-input').value;
