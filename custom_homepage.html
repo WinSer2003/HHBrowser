@@ -174,11 +174,23 @@
         <div id="time"></div>
     </div>
 
-    <!-- Search bar -->
-    <div id="search-container">
-        <input id="search-input" type="text" placeholder="Hae verkkosivustoilta..." onkeypress="handleKeyPress(event)">
-        <button onclick="performSearch()">Hae</button>
-    </div>
+
+<!-- Modify search container -->
+<select id="search-engine">
+    <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+    <option value="https://www.google.com/search?q=">Google</option>
+    <option value="https://www.bing.com/search?q=">Bing</option>
+</select>
+
+<script>
+    function performSearch() {
+        const query = document.getElementById('search-input').value;
+        const engine = document.getElementById('search-engine').value;
+        if (query) {
+            window.location.href = `${engine}${encodeURIComponent(query)}`;
+        }
+    }
+</script>
 
     <!-- Weather widget -->
     <div id="weather">
