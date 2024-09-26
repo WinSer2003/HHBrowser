@@ -183,13 +183,13 @@
     </div>
 
 <script>
-    function performSearch() {
-        const query = document.getElementById('search-input').value;
-        const engine = document.getElementById('search-engine').value;
-        if (query) {
-            window.location.href = `${engine}${encodeURIComponent(query)}`;
-        }
+function performSearch() {
+    const query = document.getElementById('search-input').value;
+    if (query) {
+        window.location.href = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
     }
+}
+
 </script>
 
     <!-- Weather widget -->
