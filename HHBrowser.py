@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineDownloadItem, QWebEngineProfile
 from PyQt5.QtGui import QIcon
+
 import lists
 endwithls = lists.endwithls
 
@@ -96,6 +97,12 @@ class SimpleBrowser(QMainWindow):
                 settings = json.load(f)
                 self.search_engine = settings.get("search_engine", self.search_engine)
                 self.homepage = settings.get("homepage", self.homepage)
+    def load_ad_blocklist(self):
+    # Load ad blocklist from file (adblocklist.txt)
+        self.ad_blocklist = []
+        if os.path.exists("adblocklist.txt"):
+         with open("adblocklist.txt", "r") as f:
+            self.ad_blocklist = [line.strip() for line in f.readlines()]
 
     def save_settings(self):
         # Save settings to JSON file
