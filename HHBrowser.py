@@ -35,6 +35,7 @@ class SimpleBrowser(QMainWindow):
         self.search_engine = "https://www.duckduckgo.com"
         self.homepage = "https://start.duckduckgo.com"
         self.download_folder = os.path.expanduser("~")  # Default download location
+        self.icon_pack = "default"  # Default icon pack
 
         # Tab widget, allows multiple tabs
         self.tabs = QTabWidget()
@@ -63,35 +64,35 @@ class SimpleBrowser(QMainWindow):
         self.addToolBar(navbar)
 
         # Back button
-        self.back_btn = QAction(QIcon("icons/back.png"), 'Back', self)
+        self.back_btn = QAction(self.get_icon("back.png"), 'Back', self)
         self.back_btn.triggered.connect(lambda: self.tabs.currentWidget().back())
         # Shortcut: Alt+Left
         self.back_btn.setShortcut(QKeySequence("Alt+Left"))
         navbar.addAction(self.back_btn)
 
         # Forward button
-        self.forward_btn = QAction(QIcon("icons/forward.png"), 'Forward', self)
+        self.forward_btn = QAction(self.get_icon("forward.png"), 'Forward', self)
         self.forward_btn.triggered.connect(lambda: self.tabs.currentWidget().forward())
         # Shortcut: Alt+Right
         self.forward_btn.setShortcut(QKeySequence("Alt+Right"))
         navbar.addAction(self.forward_btn)
 
         # Reload button
-        self.reload_btn = QAction(QIcon("icons/reload.png"), 'Reload', self)
+        self.reload_btn = QAction(self.get_icon("reload.png"), 'Reload', self)
         self.reload_btn.triggered.connect(lambda: self.tabs.currentWidget().reload())
         # Shortcut: Ctrl+R
         self.reload_btn.setShortcut(QKeySequence("Ctrl+R"))
         navbar.addAction(self.reload_btn)
 
         # Home button
-        self.home_btn = QAction(QIcon("icons/home.png"), 'Home', self)
+        self.home_btn = QAction(self.get_icon("home.png"), 'Home', self)
         self.home_btn.triggered.connect(self.navigate_home)
         # Shortcut: Alt+Home
         self.home_btn.setShortcut(QKeySequence("Alt+Home"))
         navbar.addAction(self.home_btn)
 
         # New tab button
-        self.new_btn = QAction(QIcon("icons/new.png"), 'New tab', self)
+        self.new_btn = QAction(self.get_icon("new.png"), 'New tab', self)
         self.new_btn.triggered.connect(lambda: self.add_new_tab(QUrl(self.homepage), "New Tab"))
         navbar.addAction(self.new_btn)
 
@@ -164,6 +165,26 @@ class SimpleBrowser(QMainWindow):
             with open("blocklist.txt", "r") as f:
                 self.blocklist = [line.strip() for line in f.readlines()]
 
+    def get_icon(self, icon_name):
+        """Get icon from the current icon pack. Falls back to default if not found."""
+        if self.icon_pack != "default":
+            custom_path = f"icons/packs/{self.icon_pack}/{icon_name}"
+            if os.path.exists(custom_path):
+                return QIcon(custom_path)
+        # Fall back to default icons
+        return QIcon(f"icons/{icon_name}")
+
+    def get_available_icon_packs(self):
+        """Scan and return list of available icon packs."""
+        packs = ["default"]
+        packs_dir = "icons/packs"
+        if os.path.isdir(packs_dir):
+            for item in os.listdir(packs_dir):
+                item_path = os.path.join(packs_dir, item)
+                if os.path.isdir(item_path):
+                    packs.append(item)
+        return sorted(packs)
+
     def load_settings(self):
         # Load settings from JSON file
         if os.path.exists("settings.json"):
@@ -171,6 +192,7 @@ class SimpleBrowser(QMainWindow):
                 settings = json.load(f)
                 self.search_engine = settings.get("search_engine", self.search_engine)
                 self.homepage = settings.get("homepage", self.homepage)
+                self.icon_pack = settings.get("icon_pack", self.icon_pack)
     def load_ad_blocklist(self):
     # Load ad blocklist from file (adblocklist.txt)
         self.ad_blocklist = []
@@ -182,7 +204,8 @@ class SimpleBrowser(QMainWindow):
         # Save settings to JSON file
         settings = {
             "search_engine": self.search_engine,
-            "homepage": self.homepage
+            "homepage": self.homepage,
+            "icon_pack": self.icon_pack
         }
         with open("settings.json", "w") as f:
             json.dump(settings, f)
@@ -289,6 +312,8 @@ class SimpleBrowser(QMainWindow):
         profile.downloadRequested.connect(self.handle_download)
 
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
+        # Record navigations to history (captures link clicks and redirects)
+        browser.urlChanged.connect(lambda qurl: self.record_history(qurl))
         browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
 
     def create_menu(self):
@@ -415,6 +440,19 @@ class SimpleBrowser(QMainWindow):
         self.url_bar.setText(q.toString())
         self.url_bar.setCursorPosition(0)
 
+    def record_history(self, qurl):
+        """Record a navigated URL into history and persist it."""
+        try:
+            url = qurl.toString()
+            if not url:
+                return
+            # Avoid duplicate entries
+            if url not in self.history:
+                self.history.append(url)
+                self.save_history()
+        except Exception:
+            pass
+
     def navigate_home(self):
         self.tabs.currentWidget().setUrl(QUrl(self.homepage))
 
@@ -434,6 +472,15 @@ class SimpleBrowser(QMainWindow):
         settings_layout.addWidget(QLabel("Homepage URL:"))
         settings_layout.addWidget(self.homepage_input)
 
+        # Icon Pack Selection
+        self.icon_pack_combo = QComboBox()
+        available_packs = self.get_available_icon_packs()
+        self.icon_pack_combo.addItems(available_packs)
+        current_index = available_packs.index(self.icon_pack) if self.icon_pack in available_packs else 0
+        self.icon_pack_combo.setCurrentIndex(current_index)
+        settings_layout.addWidget(QLabel("Icon Pack:"))
+        settings_layout.addWidget(self.icon_pack_combo)
+
         save_btn = QPushButton("Save", self)
         save_btn.clicked.connect(self.save_settings_from_dialog)
         settings_layout.addWidget(save_btn)
@@ -444,6 +491,10 @@ class SimpleBrowser(QMainWindow):
     def save_settings_from_dialog(self):
         self.search_engine = self.search_engine_input.text()
         self.homepage = self.homepage_input.text()
+        selected_pack = self.icon_pack_combo.currentText()
+        if selected_pack != self.icon_pack:
+            self.icon_pack = selected_pack
+            self.reload_toolbar_icons()
         self.save_settings()
 
     def choose_download_folder(self):
@@ -451,6 +502,14 @@ class SimpleBrowser(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, "Select Download Folder", self.download_folder)
         if folder:
             self.download_folder = folder
+
+    def reload_toolbar_icons(self):
+        """Reload all toolbar icons from the current icon pack."""
+        self.back_btn.setIcon(self.get_icon("back.png"))
+        self.forward_btn.setIcon(self.get_icon("forward.png"))
+        self.reload_btn.setIcon(self.get_icon("reload.png"))
+        self.home_btn.setIcon(self.get_icon("home.png"))
+        self.new_btn.setIcon(self.get_icon("new.png"))
 
     def handle_download(self, download_item: QWebEngineDownloadItem):
         # Handle download request
