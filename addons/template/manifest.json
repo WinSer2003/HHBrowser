@@ -1,0 +1,10 @@
+{
+  "name": "Vaiskiainen",
+  "version": "1.0.0",
+  "description": "Description of what your addon does",
+  "author": "Vaiskiainen",
+  "main": "addon.py",
+  "enabled": true,
+  "license": "MIT",
+  "keywords": ["tag1", "tag2"]
+}

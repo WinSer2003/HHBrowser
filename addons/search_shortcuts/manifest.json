@@ -1,0 +1,10 @@
+{
+  "name": "Search Shortcuts",
+  "version": "1.0.0",
+  "description": "Provides quick search shortcuts for Google, DuckDuckGo, Bing, GitHub, Wikipedia, and YouTube",
+  "author": "HHBrowser Team",
+  "main": "addon.py",
+  "enabled": true,
+  "license": "MIT",
+  "keywords": ["search", "shortcuts", "engines"]
+}

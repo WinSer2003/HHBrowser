@@ -1,0 +1,50 @@
+{
+  "ADDON_DEVELOPMENT_GUIDE": {
+    "enabled": true,
+    "name": "My Custom Add-on",
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "example_page_info": {
+    "enabled": true,
+    "name": "Page Info Display",
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "example_search_shortcuts": {
+    "enabled": true,
+    "name": "Search Shortcuts",
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "example_session_logger": {
+    "enabled": true,
+    "name": "Session Logger",
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "page_info": {
+    "enabled": true,
+    "name": "Page Info Display",
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "search_shortcuts": {
+    "enabled": true,
+    "name": "Search Shortcuts",
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "session_logger": {
+    "enabled": true,
+    "name": "Session Logger",
+    "version": "1.0.0",
+    "settings": {}
+  },
+  "template": {
+    "enabled": true,
+    "name": "Vaiskiainen",
+    "version": "1.0.0",
+    "settings": {}
+  }
+}

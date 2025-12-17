@@ -1,0 +1,38 @@
+[2025-12-17 20:07:28] SESSION STARTED
+[2025-12-17 20:07:28] URL changed: https://start.duckduckgo.com/
+[2025-12-17 20:07:29] Page loaded: DuckDuckGo - Protection. Privacy. Peace of mind. (https://start.duckduckgo.com/)
+[2025-12-17 20:07:48] SESSION ENDED
+[2025-12-17 20:08:46] SESSION STARTED
+[2025-12-17 20:09:04] SESSION STARTED
+[2025-12-17 20:09:04] URL changed: https://start.duckduckgo.com/
+[2025-12-17 20:09:05] Page loaded: DuckDuckGo - Protection. Privacy. Peace of mind. (https://start.duckduckgo.com/)
+[2025-12-17 20:10:15] New tab created: Tab #2
+[2025-12-17 20:10:15] URL changed: https://start.duckduckgo.com/
+[2025-12-17 20:10:15] New tab created: Tab #3
+[2025-12-17 20:10:15] URL changed: https://start.duckduckgo.com/
+[2025-12-17 20:10:15] Page loaded: DuckDuckGo - Protection. Privacy. Peace of mind. (https://start.duckduckgo.com/)
+[2025-12-17 20:10:15] Page loaded: DuckDuckGo - Protection. Privacy. Peace of mind. (https://start.duckduckgo.com/)
+[2025-12-17 20:10:16] New tab created: Tab #4
+[2025-12-17 20:10:16] URL changed: https://start.duckduckgo.com/
+[2025-12-17 20:10:16] Tab closed: Tab #4
+[2025-12-17 20:10:16] Page loaded: DuckDuckGo - Protection. Privacy. Peace of mind. (https://start.duckduckgo.com/)
+[2025-12-17 20:10:17] Tab closed: Tab #3
+[2025-12-17 20:10:17] Tab closed: Tab #2
+[2025-12-17 20:11:57] URL changed: https://www.duckduckgo.com/?q=ubuntu iso
+[2025-12-17 20:11:57] URL changed: https://duckduckgo.com/?q=ubuntu iso
+[2025-12-17 20:11:57] URL changed: https://duckduckgo.com/?q=ubuntu+iso
+[2025-12-17 20:11:58] URL changed: https://duckduckgo.com/?q=ubuntu+iso&ia=web
+[2025-12-17 20:11:58] Page loaded: ubuntu iso at DuckDuckGo (https://duckduckgo.com/?q=ubuntu+iso&ia=web)
+[2025-12-17 20:11:59] URL changed: https://ubuntu.com/download/desktop
+[2025-12-17 20:11:59] Page loaded: Download Ubuntu Desktop | Ubuntu (https://ubuntu.com/download/desktop)
+[2025-12-17 20:12:03] URL changed: https://ubuntu.com/download/desktop/thank-you?version=24.04.3&architecture=amd64&lts=true
+[2025-12-17 20:12:03] Page loaded: Thank you for downloading Ubuntu Desktop | Ubuntu (https://ubuntu.com/download/desktop/thank-you?version=24.04.3&architecture=amd64&lts=true)
+[2025-12-17 20:12:06] Page loaded: Thank you for downloading Ubuntu Desktop | Ubuntu (https://ubuntu.com/download/desktop/thank-you?version=24.04.3&architecture=amd64&lts=true)
+[2025-12-17 20:12:06] Download started: ubuntu-24.04.3-desktop-amd64.iso -> /home/vaiskiainen/ubuntu-24.04.3-desktop-amd64.iso
+[2025-12-17 20:12:09] Download started: ubuntu-24.04.3-desktop-amd64.iso -> /home/vaiskiainen/ubuntu-24.04.3-desktop-amd64.iso
+[2025-12-17 20:12:11] Download started: ubuntu-24.04.3-desktop-amd64.iso -> /home/vaiskiainen/ubuntu-24.04.3-desktop-amd64.iso
+[2025-12-17 20:12:12] Download started: ubuntu-24.04.3-desktop-amd64.iso -> /home/vaiskiainen/ubuntu-24.04.3-desktop-amd64.iso
+[2025-12-17 20:12:17] New tab created: Tab #2
+[2025-12-17 20:12:17] URL changed: https://duckduckgo.com/
+[2025-12-17 20:12:18] Page loaded: DuckDuckGo - Protection. Privacy. Peace of mind. (https://duckduckgo.com/)
+[2025-12-17 20:12:18] Tab closed: Tab #1

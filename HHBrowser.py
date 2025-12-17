@@ -9,6 +9,7 @@ from PyQt5.QtWebEngineWidgets import QWebEnginePage
 from PyQt5.QtWidgets import QDockWidget
 
 import lists
+from addon_system import AddonManager, HBrowserAddon
 endwithls = lists.endwithls
 
 class CustomWebEnginePage(QWebEnginePage):
@@ -36,6 +37,9 @@ class SimpleBrowser(QMainWindow):
         self.homepage = "https://start.duckduckgo.com"
         self.download_folder = os.path.expanduser("~")  # Default download location
         self.icon_pack = "default"  # Default icon pack
+
+        # Initialize addon system
+        self.addon_manager = AddonManager("addons")
 
         # Tab widget, allows multiple tabs
         self.tabs = QTabWidget()
@@ -159,6 +163,9 @@ class SimpleBrowser(QMainWindow):
         self.history = []
         self.load_history()
 
+        # Load add-ons after browser is fully initialized
+        self.load_addons()
+
     def load_blocklist(self):
         # Load the blocklist from a file (blocklist.txt)
         if os.path.exists("blocklist.txt"):
@@ -199,6 +206,12 @@ class SimpleBrowser(QMainWindow):
         if os.path.exists("adblocklist.txt"):
          with open("adblocklist.txt", "r") as f:
             self.ad_blocklist = [line.strip() for line in f.readlines()]
+
+    def load_addons(self):
+        """Load all enabled add-ons"""
+        results = self.addon_manager.load_all_addons(self)
+        loaded_count = sum(1 for v in results.values() if v)
+        print(f"Add-on System: Loaded {loaded_count}/{len(results)} add-ons")
 
     def save_settings(self):
         # Save settings to JSON file
@@ -314,7 +327,12 @@ class SimpleBrowser(QMainWindow):
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
         # Record navigations to history (captures link clicks and redirects)
         browser.urlChanged.connect(lambda qurl: self.record_history(qurl))
+        browser.urlChanged.connect(lambda qurl: self.addon_manager.trigger_hook('on_url_changed', qurl.toString()))
         browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
+        browser.loadFinished.connect(lambda: self.addon_manager.trigger_hook('on_page_loaded', browser.url().toString(), browser.page().title()))
+
+        # Trigger addon hook for new tab
+        self.addon_manager.trigger_hook('on_tab_created', i, browser)
 
     def create_menu(self):
         # Menu bar
@@ -426,6 +444,24 @@ class SimpleBrowser(QMainWindow):
         fullscreen_action.triggered.connect(self.toggle_fullscreen)
         tools_menu.addAction(fullscreen_action)
 
+        # Add-ons menu
+        addons_menu = menubar.addMenu("Add-ons")
+        
+        # Manage add-ons
+        manage_addons_action = QAction("Manage Add-ons", self)
+        manage_addons_action.triggered.connect(self.manage_addons)
+        addons_menu.addAction(manage_addons_action)
+        
+        # Open add-ons folder
+        open_addons_folder_action = QAction("Open Add-ons Folder", self)
+        open_addons_folder_action.triggered.connect(self.open_addons_folder)
+        addons_menu.addAction(open_addons_folder_action)
+        
+        # Reload add-ons
+        reload_addons_action = QAction("Reload Add-ons", self)
+        reload_addons_action.triggered.connect(self.reload_addons)
+        addons_menu.addAction(reload_addons_action)
+
     def add_blank_tab(self):
         self.add_new_tab(QUrl(self.search_engine), "New Tab")
 
@@ -433,6 +469,8 @@ class SimpleBrowser(QMainWindow):
         if self.tabs.count() < 2:
             return
         self.tabs.removeTab(i)
+        # Trigger addon hook for tab closed
+        self.addon_manager.trigger_hook('on_tab_closed', i)
 
     def update_urlbar(self, q, browser=None):
         if browser != self.tabs.currentWidget():
@@ -515,6 +553,9 @@ class SimpleBrowser(QMainWindow):
         # Handle download request
         suggested_name = download_item.suggestedFileName()
         download_path = os.path.join(self.download_folder, suggested_name)
+
+        # Trigger addon hook for download started
+        self.addon_manager.trigger_hook('on_download_started', suggested_name, download_path)
 
         # Choose destination path using FileDialog
         download_dialog = QFileDialog(self)
@@ -814,6 +855,136 @@ class SimpleBrowser(QMainWindow):
             self.toggle_bookmarks_toolbar_action.setChecked(self.bookmarks_toolbar.isVisible())
         except Exception:
             pass
+
+    def manage_addons(self):
+        """Show add-ons management dialog"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Manage Add-ons")
+        dialog.resize(700, 500)
+        layout = QVBoxLayout()
+
+        # Add-ons list
+        listw = QListWidget()
+        for addon_name in sorted(self.addon_manager.discover_addons()):
+            status = self.addon_manager.get_addon_status(addon_name)
+            is_enabled = status.get("enabled", False)
+            name = status.get("name", addon_name)
+            version = status.get("version", "Unknown")
+            
+            status_text = "✓ Enabled" if is_enabled else "✗ Disabled"
+            item_text = f"{name} v{version} [{status_text}]"
+            
+            item = QListWidgetItem(item_text)
+            item.setData(Qt.UserRole, addon_name)
+            listw.addItem(item)
+
+        layout.addWidget(QLabel("Available Add-ons:"))
+        layout.addWidget(listw)
+
+        # Buttons
+        btn_layout = QHBoxLayout()
+        
+        enable_btn = QPushButton("Enable Selected", self)
+        disable_btn = QPushButton("Disable Selected", self)
+        info_btn = QPushButton("Info", self)
+        close_btn = QPushButton("Close", self)
+
+        def enable_selected():
+            item = listw.currentItem()
+            if item:
+                addon_name = item.data(Qt.UserRole)
+                if self.addon_manager.set_addon_enabled(addon_name, True):
+                    status = self.addon_manager.get_addon_status(addon_name)
+                    name = status.get("name", addon_name)
+                    QMessageBox.information(self, "Success", f"Add-on '{name}' enabled")
+                    # Refresh list
+                    listw.clear()
+                    for aname in sorted(self.addon_manager.discover_addons()):
+                        astatus = self.addon_manager.get_addon_status(aname)
+                        is_en = astatus.get("enabled", False)
+                        aname_disp = astatus.get("name", aname)
+                        aversion = astatus.get("version", "Unknown")
+                        status_txt = "✓ Enabled" if is_en else "✗ Disabled"
+                        item_txt = f"{aname_disp} v{aversion} [{status_txt}]"
+                        it = QListWidgetItem(item_txt)
+                        it.setData(Qt.UserRole, aname)
+                        listw.addItem(it)
+
+        def disable_selected():
+            item = listw.currentItem()
+            if item:
+                addon_name = item.data(Qt.UserRole)
+                if self.addon_manager.set_addon_enabled(addon_name, False):
+                    status = self.addon_manager.get_addon_status(addon_name)
+                    name = status.get("name", addon_name)
+                    QMessageBox.information(self, "Success", f"Add-on '{name}' disabled")
+                    # Refresh list
+                    listw.clear()
+                    for aname in sorted(self.addon_manager.discover_addons()):
+                        astatus = self.addon_manager.get_addon_status(aname)
+                        is_en = astatus.get("enabled", False)
+                        aname_disp = astatus.get("name", aname)
+                        aversion = astatus.get("version", "Unknown")
+                        status_txt = "✓ Enabled" if is_en else "✗ Disabled"
+                        item_txt = f"{aname_disp} v{aversion} [{status_txt}]"
+                        it = QListWidgetItem(item_txt)
+                        it.setData(Qt.UserRole, aname)
+                        listw.addItem(it)
+
+        def show_info():
+            item = listw.currentItem()
+            if item:
+                addon_name = item.data(Qt.UserRole)
+                status = self.addon_manager.get_addon_status(addon_name)
+                addon_obj = self.addon_manager.get_addon(addon_name)
+                
+                info_text = f"Name: {status.get('name', addon_name)}\n"
+                info_text += f"Version: {status.get('version', 'Unknown')}\n"
+                info_text += f"Status: {'Enabled' if status.get('enabled') else 'Disabled'}\n"
+                
+                if addon_obj:
+                    info_text += f"Description: {addon_obj.description}\n"
+                    info_text += f"Author: {addon_obj.author}\n"
+                
+                QMessageBox.information(self, f"Add-on Info", info_text)
+
+        enable_btn.clicked.connect(enable_selected)
+        disable_btn.clicked.connect(disable_selected)
+        info_btn.clicked.connect(show_info)
+        close_btn.clicked.connect(dialog.reject)
+
+        btn_layout.addWidget(enable_btn)
+        btn_layout.addWidget(disable_btn)
+        btn_layout.addWidget(info_btn)
+        btn_layout.addWidget(close_btn)
+
+        layout.addLayout(btn_layout)
+        dialog.setLayout(layout)
+        dialog.exec_()
+
+    def open_addons_folder(self):
+        """Open the add-ons folder in file explorer"""
+        addons_dir = os.path.abspath(self.addon_manager.addons_dir)
+        if not os.path.exists(addons_dir):
+            os.makedirs(addons_dir)
+        
+        import subprocess
+        if sys.platform == "win32":
+            os.startfile(addons_dir)
+        elif sys.platform == "darwin":  # macOS
+            subprocess.run(["open", addons_dir])
+        else:  # Linux
+            subprocess.run(["xdg-open", addons_dir])
+
+    def reload_addons(self):
+        """Reload all add-ons"""
+        # Unload all current addons
+        for addon_name in list(self.addon_manager.addons.keys()):
+            self.addon_manager.unload_addon(addon_name)
+        
+        # Reload
+        self.load_addons()
+        QMessageBox.information(self, "Add-ons Reloaded", "All add-ons have been reloaded")
 
 app = QApplication(sys.argv)
 QApplication.setApplicationName("HHBrowser")

@@ -1,0 +1,10 @@
+{
+  "name": "Page Info Display",
+  "version": "1.0.0",
+  "description": "Displays information about loaded pages (URL, title, load time)",
+  "author": "HHBrowser Team",
+  "main": "addon.py",
+  "enabled": true,
+  "license": "MIT",
+  "keywords": ["page", "info", "stats", "monitoring"]
+}
