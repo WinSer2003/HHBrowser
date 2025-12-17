@@ -4,12 +4,29 @@ import json
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineDownloadItem, QWebEngineProfile
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWebEngineWidgets import QWebEnginePage
 from PyQt5.QtWidgets import QDockWidget
 
 import lists
 endwithls = lists.endwithls
+
+class CustomWebEnginePage(QWebEnginePage):
+    """Custom web engine page to add Inspect option to context menu."""
+    def __init__(self, profile, browser_instance):
+        super().__init__(profile)
+        self.browser_instance = browser_instance
+
+    def contextMenuEvent(self, params):
+        # Create a context menu and add Inspect action
+        menu = QMenu()
+        
+        # Add Inspect action
+        inspect_action = menu.addAction("Inspect Element")
+        inspect_action.triggered.connect(self.browser_instance.open_devtools)
+        
+        # Show the menu at cursor position
+        menu.exec_(params.globalPos())
 
 class SimpleBrowser(QMainWindow):
     def __init__(self):
@@ -48,21 +65,29 @@ class SimpleBrowser(QMainWindow):
         # Back button
         self.back_btn = QAction(QIcon("icons/back.png"), 'Back', self)
         self.back_btn.triggered.connect(lambda: self.tabs.currentWidget().back())
+        # Shortcut: Alt+Left
+        self.back_btn.setShortcut(QKeySequence("Alt+Left"))
         navbar.addAction(self.back_btn)
 
         # Forward button
         self.forward_btn = QAction(QIcon("icons/forward.png"), 'Forward', self)
         self.forward_btn.triggered.connect(lambda: self.tabs.currentWidget().forward())
+        # Shortcut: Alt+Right
+        self.forward_btn.setShortcut(QKeySequence("Alt+Right"))
         navbar.addAction(self.forward_btn)
 
         # Reload button
         self.reload_btn = QAction(QIcon("icons/reload.png"), 'Reload', self)
         self.reload_btn.triggered.connect(lambda: self.tabs.currentWidget().reload())
+        # Shortcut: Ctrl+R
+        self.reload_btn.setShortcut(QKeySequence("Ctrl+R"))
         navbar.addAction(self.reload_btn)
 
         # Home button
         self.home_btn = QAction(QIcon("icons/home.png"), 'Home', self)
         self.home_btn.triggered.connect(self.navigate_home)
+        # Shortcut: Alt+Home
+        self.home_btn.setShortcut(QKeySequence("Alt+Home"))
         navbar.addAction(self.home_btn)
 
         # New tab button
@@ -73,6 +98,37 @@ class SimpleBrowser(QMainWindow):
         # Add address bar to navigation toolbar
         navbar.addWidget(self.url_bar)
 
+        # Shortcuts for tab navigation and actions
+
+        # Next / Previous tab: Ctrl+Tab / Ctrl+Shift+Tab
+        next_tab_sc = QShortcut(QKeySequence("Ctrl+Tab"), self)
+        prev_tab_sc = QShortcut(QKeySequence("Ctrl+Shift+Tab"), self)
+        def next_tab():
+            i = self.tabs.currentIndex()
+            count = self.tabs.count()
+            if count > 1:
+                self.tabs.setCurrentIndex((i + 1) % count)
+        def prev_tab():
+            i = self.tabs.currentIndex()
+            count = self.tabs.count()
+            if count > 1:
+                self.tabs.setCurrentIndex((i - 1) % count)
+        next_tab_sc.activated.connect(next_tab)
+        prev_tab_sc.activated.connect(prev_tab)
+
+        # Focus address bar: Ctrl+L
+        focus_url_sc = QShortcut(QKeySequence("Ctrl+L"), self)
+        focus_url_sc.activated.connect(lambda: self.url_bar.setFocus())
+
+        # Note: Ctrl+T handled by the menu action (application-wide)
+
+        # Place the bookmarks toolbar on the next row below the navigation toolbar
+        self.addToolBarBreak()
+        self.bookmarks_toolbar = QToolBar("Bookmarks Toolbar")
+        self.bookmarks_toolbar.setObjectName("BookmarksToolbar")
+        self.bookmarks_toolbar.setMovable(True)
+        self.addToolBar(Qt.TopToolBarArea, self.bookmarks_toolbar)
+
         # Add new tab with homepage
         self.load_settings()
         self.add_new_tab(QUrl(self.homepage), "New Tab")
@@ -81,8 +137,15 @@ class SimpleBrowser(QMainWindow):
         self.blocklist = []
         self.load_blocklist()
 
+        # Bookmarks storage
+        self.bookmarks_file = "bookmarks.json"
+        self.bookmarks = []
+        self.load_bookmarks()
         # Show browser window maximized
         self.showMaximized()
+
+        # Populate bookmarks toolbar
+        self.refresh_bookmarks_toolbar()
 
         # Menu bar
         self.create_menu()
@@ -130,6 +193,54 @@ class SimpleBrowser(QMainWindow):
             with open(self.history_file, "r") as f:
                 self.history = [line.strip() for line in f.readlines()]
 
+    def load_bookmarks(self):
+        # Load bookmarks from JSON file
+        if os.path.exists(self.bookmarks_file):
+            try:
+                with open(self.bookmarks_file, "r") as f:
+                    data = json.load(f)
+                    # ensure list of dicts with title/url
+                    if isinstance(data, list):
+                        # ensure pinned flag exists
+                        for bm in data:
+                            if isinstance(bm, dict):
+                                bm.setdefault("pinned", False)
+                        self.bookmarks = data
+            except Exception:
+                self.bookmarks = []
+
+    def save_bookmarks(self):
+        # Save bookmarks to JSON file
+        try:
+            with open(self.bookmarks_file, "w") as f:
+                json.dump(self.bookmarks, f, indent=2)
+        except Exception:
+            pass
+
+    def refresh_bookmarks_toolbar(self):
+        # Clear existing actions
+        for a in list(self.bookmarks_toolbar.actions()):
+            self.bookmarks_toolbar.removeAction(a)
+
+        # Add pinned bookmarks as toolbar actions
+        for bm in self.bookmarks:
+            if not isinstance(bm, dict):
+                continue
+            if not bm.get("pinned", False):
+                continue
+            title = bm.get("title") or bm.get("url")
+            url = bm.get("url")
+            act = QAction(title, self)
+            act.triggered.connect(lambda chk=False, u=url: self.open_bookmark_url(u))
+            self.bookmarks_toolbar.addAction(act)
+
+    def open_bookmark_url(self, url):
+        # Open bookmark in current tab
+        try:
+            self.tabs.currentWidget().setUrl(QUrl(url))
+        except Exception:
+            pass
+
     def save_history(self):
         # Save history to file
         with open(self.history_file, "w") as f:
@@ -161,8 +272,11 @@ class SimpleBrowser(QMainWindow):
     
     def add_new_tab(self, qurl=None, label="Blank"):
         browser = QWebEngineView()
-        browser.setContextMenuPolicy(Qt.CustomContextMenu)
-        browser.customContextMenuRequested.connect(lambda _: self.open_devtools())
+        
+        # Create custom page with context menu handler
+        profile = QWebEngineProfile.defaultProfile()
+        custom_page = CustomWebEnginePage(profile, self)
+        browser.setPage(custom_page)
 
         browser.setUrl(qurl if qurl else QUrl(self.search_engine))
 
@@ -172,7 +286,6 @@ class SimpleBrowser(QMainWindow):
         self.tabs.setCurrentIndex(i)
 
         # Download listener
-        profile = browser.page().profile()
         profile.downloadRequested.connect(self.handle_download)
 
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
@@ -188,10 +301,20 @@ class SimpleBrowser(QMainWindow):
         # New tab
         new_tab_action = QAction("New Tab", self)
         new_tab_action.triggered.connect(self.add_blank_tab)
+        new_tab_action.setShortcut(QKeySequence("Ctrl+T"))
+        new_tab_action.setShortcutContext(Qt.ApplicationShortcut)
         file_menu.addAction(new_tab_action)
+
+        # Close tab
+        close_tab_action = QAction("Close Tab", self)
+        close_tab_action.setShortcut(QKeySequence("Ctrl+W"))
+        close_tab_action.setShortcutContext(Qt.ApplicationShortcut)
+        close_tab_action.triggered.connect(lambda: self.close_current_tab(self.tabs.currentIndex()))
+        file_menu.addAction(close_tab_action)
 
         # Exit application
         exit_action = QAction("Exit", self)
+        exit_action.setShortcut(QKeySequence("Ctrl+Q"))
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
@@ -211,21 +334,43 @@ class SimpleBrowser(QMainWindow):
         download_action.triggered.connect(self.choose_download_folder)
         downloads_menu.addAction(download_action)
 
-        # View menu for "View Source"
+        # View menu
         view_menu = menubar.addMenu("View")
-        
-        # View Source action
-        view_source_action = QAction("View Source", self)
-        view_source_action.triggered.connect(self.view_source)
-        view_menu.addAction(view_source_action)
+
+        # Focus address bar action
+        focus_addr_action = QAction("Focus Address Bar", self)
+        focus_addr_action.setShortcut(QKeySequence("Ctrl+L"))
+        focus_addr_action.triggered.connect(lambda: self.url_bar.setFocus())
+        view_menu.addAction(focus_addr_action)
 
         # History menu
         history_menu = menubar.addMenu("History")
 
         # View History action
         view_history_action = QAction("View History", self)
+        view_history_action.setShortcut(QKeySequence("Ctrl+H"))
         view_history_action.triggered.connect(self.view_history)
         history_menu.addAction(view_history_action)
+
+        # Bookmarks menu
+        bookmarks_menu = menubar.addMenu("Bookmarks")
+
+        add_book_action = QAction("Add Bookmark", self)
+        add_book_action.setShortcut("Ctrl+D")
+        add_book_action.triggered.connect(self.add_bookmark)
+        bookmarks_menu.addAction(add_book_action)
+
+        view_bookmarks_action = QAction("View Bookmarks", self)
+        view_bookmarks_action.triggered.connect(self.view_bookmarks)
+        bookmarks_menu.addAction(view_bookmarks_action)
+
+        # Show/hide bookmarks toolbar
+        self.toggle_bookmarks_toolbar_action = QAction("Show Bookmarks Toolbar", self)
+        self.toggle_bookmarks_toolbar_action.setCheckable(True)
+        self.toggle_bookmarks_toolbar_action.setChecked(self.bookmarks_toolbar.isVisible())
+        self.toggle_bookmarks_toolbar_action.triggered.connect(self.toggle_bookmarks_toolbar)
+        self.toggle_bookmarks_toolbar_action.setShortcut(QKeySequence("Ctrl+Shift+B"))
+        bookmarks_menu.addAction(self.toggle_bookmarks_toolbar_action)
 
         # Tools menu
         tools_menu = menubar.addMenu("Tools")
@@ -235,6 +380,11 @@ class SimpleBrowser(QMainWindow):
         devtools_action.setShortcut("F12")
         devtools_action.triggered.connect(self.open_devtools)
         tools_menu.addAction(devtools_action)
+        # Alternate DevTools shortcut (Ctrl+Shift+I)
+        devtools_alt = QAction("Open DevTools (Alternate)", self)
+        devtools_alt.setShortcut(QKeySequence("Ctrl+Shift+I"))
+        devtools_alt.triggered.connect(self.open_devtools)
+        tools_menu.addAction(devtools_alt)
 
         # AI Chat action
         ai_chat_action = QAction("Start AI Chat", self)
@@ -464,20 +614,6 @@ class SimpleBrowser(QMainWindow):
         """
         self.setStyleSheet(rounded_style)
 
-    def view_source(self):
-        # Get the current web page
-        current_browser = self.tabs.currentWidget()
-
-        # Retrieve the HTML source and display it in a new tab
-        current_browser.page().toHtml(self.display_source)
-
-    def display_source(self, html):
-        # Create a new tab for the source code
-        text_edit = QTextEdit()
-        text_edit.setPlainText(html)
-        i = self.tabs.addTab(text_edit, "Source View")
-        self.tabs.setCurrentIndex(i)
-
     def clear_cache(self):
         # Clear the cache
         QWebEngineProfile.defaultProfile().clearHttpCache()
@@ -518,6 +654,76 @@ class SimpleBrowser(QMainWindow):
         if selected_items:
             selected_url = selected_items[0].text()
             self.tabs.currentWidget().setUrl(QUrl(selected_url))
+    def add_bookmark(self):
+        # Add current page as a bookmark (allow editing title)
+        browser = self.tabs.currentWidget()
+        if not isinstance(browser, QWebEngineView):
+            QMessageBox.information(self, "Add Bookmark", "Current view is not a web page.")
+            return
+        url = browser.url().toString()
+        title = browser.page().title() or url
+        title, ok = QInputDialog.getText(self, "Add Bookmark", "Title:", text=title)
+        if ok and title:
+            # Ask whether to pin to toolbar
+            resp = QMessageBox.question(self, "Pin to Toolbar", "Add this bookmark to the bookmarks toolbar?", QMessageBox.Yes | QMessageBox.No)
+            pinned = True if resp == QMessageBox.Yes else False
+            self.bookmarks.append({"title": title, "url": url, "pinned": pinned})
+            self.save_bookmarks()
+            self.refresh_bookmarks_toolbar()
+            QMessageBox.information(self, "Bookmark Added", f"Added '{title}'")
+
+    def view_bookmarks(self):
+        # Show bookmarks in a dialog with open/delete
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Bookmarks")
+        dlg.resize(600, 400)
+        layout = QVBoxLayout()
+
+        listw = QListWidget()
+        for bm in self.bookmarks:
+            item = QListWidgetItem(bm.get("title", bm.get("url", "")))
+            item.setData(Qt.UserRole, bm.get("url", ""))
+            listw.addItem(item)
+
+        layout.addWidget(listw)
+
+        btn_layout = QHBoxLayout()
+        open_btn = QPushButton("Open Selected", self)
+        delete_btn = QPushButton("Delete Selected", self)
+        close_btn = QPushButton("Close", self)
+
+        def open_selected():
+            sel = listw.currentItem()
+            if sel:
+                url = sel.data(Qt.UserRole)
+                self.tabs.currentWidget().setUrl(QUrl(url))
+                dlg.accept()
+
+        def delete_selected():
+            row = listw.currentRow()
+            if row >= 0:
+                confirm = QMessageBox.question(self, "Delete Bookmark", "Delete selected bookmark?", QMessageBox.Yes | QMessageBox.No)
+                if confirm == QMessageBox.Yes:
+                    listw.takeItem(row)
+                    try:
+                        self.bookmarks.pop(row)
+                        self.save_bookmarks()
+                        self.refresh_bookmarks_toolbar()
+                    except Exception:
+                        pass
+
+        open_btn.clicked.connect(open_selected)
+        delete_btn.clicked.connect(delete_selected)
+        close_btn.clicked.connect(dlg.reject)
+
+        btn_layout.addWidget(open_btn)
+        btn_layout.addWidget(delete_btn)
+        btn_layout.addWidget(close_btn)
+
+        layout.addLayout(btn_layout)
+        dlg.setLayout(layout)
+        listw.itemDoubleClicked.connect(lambda it: (self.tabs.currentWidget().setUrl(QUrl(it.data(Qt.UserRole))), dlg.accept()))
+        dlg.exec_()
     def open_devtools(self):
         browser = self.tabs.currentWidget()
         if not isinstance(browser, QWebEngineView):
@@ -538,6 +744,17 @@ class SimpleBrowser(QMainWindow):
         else:
             self.devtools_dock.show()
             self.devtools_dock.raise_()
+
+    def toggle_bookmarks_toolbar(self, checked: bool):
+        if checked:
+            self.bookmarks_toolbar.show()
+        else:
+            self.bookmarks_toolbar.hide()
+        # keep action state in sync
+        try:
+            self.toggle_bookmarks_toolbar_action.setChecked(self.bookmarks_toolbar.isVisible())
+        except Exception:
+            pass
 
 app = QApplication(sys.argv)
 QApplication.setApplicationName("HHBrowser")
