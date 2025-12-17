@@ -5,6 +5,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineDownloadItem, QWebEngineProfile
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWebEngineWidgets import QWebEnginePage
+from PyQt5.QtWidgets import QDockWidget
 
 import lists
 endwithls = lists.endwithls
@@ -12,7 +14,6 @@ endwithls = lists.endwithls
 class SimpleBrowser(QMainWindow):
     def __init__(self):
         super().__init__()
-
         # Initialize attributes
         self.search_engine = "https://www.duckduckgo.com"
         self.homepage = "https://start.duckduckgo.com"
@@ -24,6 +25,16 @@ class SimpleBrowser(QMainWindow):
         self.tabs.tabCloseRequested.connect(self.close_current_tab)
         self.tabs.currentChanged.connect(self.update_title)
         self.setCentralWidget(self.tabs)
+        # --- DevTools Dock ---
+        self.devtools_dock = QDockWidget("Developer Tools", self)
+        self.devtools_dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        self.devtools_dock.setFeatures(QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetMovable)
+
+        self.devtools_view = QWebEngineView()
+        self.devtools_dock.setWidget(self.devtools_view)
+
+        self.addDockWidget(Qt.RightDockWidgetArea, self.devtools_dock)
+        self.devtools_dock.hide()
 
         # Address bar
         self.url_bar = QLineEdit()
@@ -150,6 +161,9 @@ class SimpleBrowser(QMainWindow):
     
     def add_new_tab(self, qurl=None, label="Blank"):
         browser = QWebEngineView()
+        browser.setContextMenuPolicy(Qt.CustomContextMenu)
+        browser.customContextMenuRequested.connect(lambda _: self.open_devtools())
+
         browser.setUrl(qurl if qurl else QUrl(self.search_engine))
 
         # Removed SSL error handling and SSL status checks
@@ -215,6 +229,13 @@ class SimpleBrowser(QMainWindow):
 
         # Tools menu
         tools_menu = menubar.addMenu("Tools")
+        
+        # DevTools
+        devtools_action = QAction("Open DevTools", self)
+        devtools_action.setShortcut("F12")
+        devtools_action.triggered.connect(self.open_devtools)
+        tools_menu.addAction(devtools_action)
+
         # AI Chat action
         ai_chat_action = QAction("Start AI Chat", self)
         ai_chat_action.triggered.connect(lambda: self.add_new_tab(QUrl("https://duckduckgo.com/aichat"), "AI Chat"))
@@ -497,6 +518,26 @@ class SimpleBrowser(QMainWindow):
         if selected_items:
             selected_url = selected_items[0].text()
             self.tabs.currentWidget().setUrl(QUrl(selected_url))
+    def open_devtools(self):
+        browser = self.tabs.currentWidget()
+        if not isinstance(browser, QWebEngineView):
+            return
+
+        # Create devtools page using SAME profile
+        devtools_page = QWebEnginePage(browser.page().profile())
+
+
+        devtools_page.setInspectedPage(browser.page())
+
+        browser.page().setDevToolsPage(devtools_page)
+        self.devtools_view.setPage(devtools_page)
+
+        # Toggle dock visibility (Chrome-like)
+        if self.devtools_dock.isVisible():
+            self.devtools_dock.hide()
+        else:
+            self.devtools_dock.show()
+            self.devtools_dock.raise_()
 
 app = QApplication(sys.argv)
 QApplication.setApplicationName("HHBrowser")
